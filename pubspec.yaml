@@ -1,0 +1,16 @@
+name: shelf_injection_router
+version: 0.1.0
+description: Shelf middleware that provides routing with route params, handler injection and params validation.
+homepage: https://github.com/octobyte/shelf_injection_router
+author: Thomas Profelt <tom@octobyte.at>
+
+dependencies:
+  shelf: any
+  shelf_exception_response:
+    path: ../shelf_exception_response
+
+dev_dependencies:
+  unittest: any
+
+environment:
+  sdk: ">=1.3.0"
