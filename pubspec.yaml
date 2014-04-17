@@ -6,8 +6,7 @@ author: Thomas Profelt <tom@octobyte.at>
 
 dependencies:
   shelf: any
-  shelf_exception_response:
-    path: ../shelf_exception_response
+  shelf_exception_response: any
 
 dev_dependencies:
   unittest: any
