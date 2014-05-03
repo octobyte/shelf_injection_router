@@ -6,17 +6,17 @@ import 'package:shelf_injection_router/src/injection_context.dart';
 
 String BASE_URL = "http://www.test.io";
 
-shelf.Request createShelfRequest(String method, String path, [Map<String, dynamic> ctx]) {
+shelf.Request createShelfRequest(String method, String path, [Map<String, dynamic> ctx, String body = "src/body.json"]) {
   Uri uri = Uri.parse(BASE_URL + path);
   Map<String, String>headers = {};
-  File file = new File("body.json");
+  File file = new File(body);
   Map<String, Object> context = {};
-  var inj = new InjectionContext();
-  if(ctx != null) {
-    inj.injectables.addAll(ctx);
-  }
 
-  context["shelf_injection_router.ctx"] = inj;
+  if(ctx != null) {
+    var inj = new InjectionContext();
+    inj.injectables.addAll(ctx);
+    context["shelf_injection_router.ctx"] = inj;
+  }
 
   return new shelf.Request(method, uri, body: file.openRead(), context: context);
 }

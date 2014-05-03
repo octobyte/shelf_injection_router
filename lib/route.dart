@@ -1,4 +1,5 @@
 import 'package:shelf/shelf.dart' as shelf;
+import 'package:shelf_injection_router/src/handler_reflection.dart';
 
 /**
  * Represents a single [Route] for a [Router]. Prepares
@@ -25,6 +26,7 @@ import 'package:shelf/shelf.dart' as shelf;
 class Route {
 
   static final String VAR_PATTERN = r'([\w\d]+)';
+  static final String VALUE_PATTERN = r'([^\/]+)';
   final List<String> reservedParams = ["request", "body"];
 
   // Handler for this Route
@@ -43,7 +45,9 @@ class Route {
    * function which handles this route. You can optionally define a different
    * Route params format with [varPrefix] and [varSuffix].
    */
-  Route(String route, this.handler, {varPrefix: ':', varSuffix: ''}) {
+  Route(String route, handler, {varPrefix: ':', varSuffix: ''}) {
+    HandlerReflection ref = new HandlerReflection(handler);
+    this.handler = ref.createHandler();
     _prepareExpression = new RegExp(varPrefix + VAR_PATTERN + varSuffix);
     this.route = route;
   }
@@ -89,7 +93,7 @@ class Route {
 
   // Compile route definition to matcher and sets placeholders.
   void _compileMatcher(String route) {
-    _matcher = new RegExp('^' + route.replaceAll(_prepareExpression, VAR_PATTERN) + r'$');
+    _matcher = new RegExp('^' + route.replaceAll(_prepareExpression, VALUE_PATTERN) + r'$');
     placeholders = [];
     _prepareExpression.allMatches(route).forEach((m) {
       for(var i = 1; i<=m.groupCount; i++) {

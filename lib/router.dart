@@ -27,11 +27,10 @@ class Router {
   dynamic _handle(shelf.Request request) {
     Route route = _getHandler(request);
     if(route != null) {
-
       var context = new Map.from(request.context);
       InjectionContext ctx = new InjectionContext();
       ctx.injectables.addAll(route.params(request.requestedUri));
-      context["shelf_injection_router.ctx"] = ctx;
+      context[InjectionContext.CONTEXT_NAME] = ctx;
 
       // create new request with injection context
       shelf.Request req = new shelf.Request(
@@ -47,7 +46,11 @@ class Router {
       return request.readAsString().then((String body) {
         ctx.injectables["body"] = body;
         return route.handler(req);
+      }).catchError((err) {
+        ctx.injectables["body"] = "";
+        return route.handler(req);
       });
+
 
     }
   }

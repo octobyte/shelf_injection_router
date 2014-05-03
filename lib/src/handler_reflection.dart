@@ -1,5 +1,6 @@
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf_exception_response/exception.dart';
+import 'package:shelf_injection_router/src/injection_context.dart';
 import 'dart:mirrors';
 
 /**
@@ -52,7 +53,7 @@ class HandlerReflection {
    */
   _processParam(String name, ParameterMirror param, shelf.Request req, [value]) {
 
-    // original request and strings always just returned
+    // original request always just returned
     if (param.type.reflectedType == shelf.Request || name == "request" || name == "req") {
       return req;
     }
@@ -150,9 +151,13 @@ class HandlerReflection {
    * Collects a arguments from request and maps it to inject positional and named arguments.
    */
   ArgumentsResult getArguments(shelf.Request request) {
-    var ctx = request.context["shelf_injection_router.ctx"];
-    ArgumentsResult res = _getPosArgs(ctx.injectables, request, new ArgumentsResult());
-    return _getNamedArgs(ctx.injectables, request, res);
+    var ctx = request.context[InjectionContext.CONTEXT_NAME];
+    var injectables = {};
+    if(ctx != null) {
+      injectables = ctx.injectables;
+    }
+    ArgumentsResult res = _getPosArgs(injectables, request, new ArgumentsResult());
+    return _getNamedArgs(injectables, request, res);
   }
 
   /**

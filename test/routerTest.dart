@@ -7,6 +7,7 @@ import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf_injection_router/router.dart';
 import 'package:shelf_injection_router/route.dart';
 import './src/utils.dart';
+import 'package:shelf_injection_router/src/injection_context.dart';
 
 void main() {
 
@@ -48,7 +49,6 @@ void main() {
       });
 
       router.addRoute('/:v1', (request) {
-        print(request.context["shelf_injection_router.ctx"].injectables);
         return new shelf.Response.ok("done");
       });
 
@@ -71,6 +71,90 @@ void main() {
       });
 
 
+
+    });
+
+    group("injection",() {
+
+      var router = new Router();
+      var mw = router.middleware;
+      var handler = mw((r) {throw new Exception();});
+
+      test("creates injectable context", () {
+        var request = createShelfRequest('GET', '/test');
+        router.addRoute('/test', (request) {
+          expect(request.context[InjectionContext.CONTEXT_NAME] is InjectionContext, isTrue);
+          return new shelf.Response.ok("done");
+        });
+        expect(handler(request), completes);
+      });
+
+      group("injects route params", () {
+
+
+
+        test("injects strings", () {
+          var request = createShelfRequest('GET', '/strings/tom/123');
+          router.addRoute('/strings/:name/:id', (String id, String name) {
+            expect(id, equals("123"));
+            expect(name, equals("tom"));
+            return new shelf.Response.ok("done");
+          });
+          expect(handler(request), completes);
+        });
+
+        test("injects converted values", () {
+          var request = createShelfRequest('GET', '/values/tom/123/42.45/1/false');
+          router.addRoute('/values/:name/:id/:lat/:b1/:b2', (int id, String name, double lat, bool b1, bool b2) {
+            print("${id} ${name} ${lat}");
+            expect(id, equals(123));
+            expect(name, equals("tom"));
+            expect(lat, equals(42.45));
+            expect(b1, equals(true));
+            expect(b2, equals(false));
+            return new shelf.Response.ok("done");
+          });
+          expect(handler(request), completes);
+        });
+
+        test("injects request by type", () {
+          var request = createShelfRequest('GET', '/request');
+          router.addRoute("/request", (shelf.Request r) {
+            expect(r is shelf.Request, isTrue);
+            return new shelf.Response.ok("done");
+          });
+          expect(handler(request), completes);
+        });
+
+        test("injects request by name", () {
+          var request = createShelfRequest('GET', '/request1');
+          router.addRoute("/request1", (request, [o]) {
+            expect(request is shelf.Request, isTrue);
+            return new shelf.Response.ok("done");
+          });
+          expect(handler(request), completes);
+        });
+
+        test("injects request single param compatibility mode", () {
+          var request = createShelfRequest('GET', '/request2');
+          router.addRoute("/request2", (r) {
+            expect(r is shelf.Request, isTrue);
+            return new shelf.Response.ok("done");
+          });
+          expect(handler(request), completes);
+        });
+
+        test("injects resolved body as string", () {
+          var req = createShelfRequest('GET', '/body', null, 'src/body.txt');
+          router.addRoute('/body', (body) {
+            expect(body is String, isTrue);
+            expect(body, equals("textbody"));
+            return new shelf.Response.ok("done");
+          });
+          expect(handler(req), completes);
+        });
+
+      });
 
     });
 
