@@ -1,7 +1,9 @@
-library tentacle.core.router;
+library shelf_injection_router.router;
 
 import 'dart:async';
 import 'package:shelf/shelf.dart' as shelf;
+import './src/injection_context.dart';
+
 import 'package:shelf_injection_router/route.dart';
 export 'package:shelf_injection_router/route.dart';
 
@@ -21,13 +23,32 @@ class Router {
    * Matches the request route against the registered routes
    * and dispatches the Routes handler for the first Route that
    * matches.
-   *
-   * If no Route matches the requested url a 404 HttpException is thrown.
    */
   dynamic _handle(shelf.Request request) {
-    Function routeHandler = _getHandler(request);
-    if(routeHandler is Function) {
-      return routeHandler(request);
+    Route route = _getHandler(request);
+    if(route != null) {
+
+      var context = new Map.from(request.context);
+      InjectionContext ctx = new InjectionContext();
+      ctx.injectables.addAll(route.params(request.requestedUri));
+      context["shelf_injection_router.ctx"] = ctx;
+
+      // create new request with injection context
+      shelf.Request req = new shelf.Request(
+          request.method, request.requestedUri,
+          context: context,
+          headers: request.headers,
+          protocolVersion: request.protocolVersion,
+          url: request.url,
+          scriptName: request.scriptName
+      );
+
+      // read out the requests body as string for further processing
+      return request.readAsString().then((String body) {
+        ctx.injectables["body"] = body;
+        return route.handler(req);
+      });
+
     }
   }
 
@@ -35,20 +56,13 @@ class Router {
    * Matches request uri against registered routes and returns
    * the route handler if one could be found.
    */
-  Handler _getHandler(shelf.Request request) {
+  Route _getHandler(shelf.Request request) {
     if(request.method is String) {
       if(routes.containsKey(request.method)) {
-        Route route = routes[request.method].firstWhere((Route route) {
+        return routes[request.method].firstWhere((Route route) {
           return route.match(request.requestedUri);
         }, orElse:() => null);
-
-        if(route != null) {
-          return route.handler;
-        }
       }
-      // match against registered handlers
-      // found -> parse route params and convert according to handler
-      // return handler
     }
   }
 

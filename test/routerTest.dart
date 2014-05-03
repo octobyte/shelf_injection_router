@@ -1,20 +1,12 @@
 library tentacle.test.core.router;
 
 import 'dart:io';
-import 'dart:async' show Future;
+import 'dart:async';
 import 'package:unittest/unittest.dart';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf_injection_router/router.dart';
 import 'package:shelf_injection_router/route.dart';
-import 'package:shelf_exception_response/exception.dart';
-
-String BASE_URL = "http://www.test.io";
-
-shelf.Request createShelfRequest(String method, String path) {
- Uri uri = Uri.parse(BASE_URL + path);
- Map<String, String>headers = {};
- return new shelf.Request(method, uri);
-}
+import './src/utils.dart';
 
 void main() {
 
@@ -55,8 +47,13 @@ void main() {
         return new shelf.Response.ok("done");
       });
 
+      router.addRoute('/:v1', (request) {
+        print(request.context["shelf_injection_router.ctx"].injectables);
+        return new shelf.Response.ok("done");
+      });
+
       shelf.Middleware middleware = router.middleware;
-      Handler handler = middleware((r){});
+      shelf.Handler handler = middleware((r){});
       shelf.Request rootRequest = createShelfRequest('GET', '/');
 
       test("returns middleware", () {
@@ -66,6 +63,11 @@ void main() {
       test("takes request and returns future", () {
         var request = createShelfRequest('GET', '/');
         expect(handler(request) is Future, isTrue);
+      });
+
+      test("handler gets called with request object", () {
+        var request = createShelfRequest('GET', '/asdf');
+        handler(request);
       });
 
 

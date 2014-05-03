@@ -1,4 +1,5 @@
 import 'package:unittest/unittest.dart';
+import 'package:shelf_injection_router/route.dart';
 
 void main() {
 
@@ -99,9 +100,15 @@ void main() {
     };
 
     group("construct", (){
+
       test("gives Route", (){
         var route = new Route('/', handler);
         expect(route is Route, isTrue);
+      });
+
+      test("throws on reserved word", () {
+        expect(() => new Route('/:request', handler), throws);
+        expect(() => new Route('/:body', handler), throws);
       });
     });
 

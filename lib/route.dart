@@ -25,9 +25,10 @@ import 'package:shelf/shelf.dart' as shelf;
 class Route {
 
   static final String VAR_PATTERN = r'([\w\d]+)';
+  final List<String> reservedParams = ["request", "body"];
 
   // Handler for this Route
-  shelf.Handler handler;
+  Function handler;
 
   String _route;
   RegExp _prepareExpression;
@@ -92,7 +93,11 @@ class Route {
     placeholders = [];
     _prepareExpression.allMatches(route).forEach((m) {
       for(var i = 1; i<=m.groupCount; i++) {
-        placeholders.add(m.group(i));
+        String placeholder = m.group(i);
+        if(reservedParams.contains(placeholder)) {
+          throw new Exception("Can't use ':${placeholder}' in route ${route}. ${placeholder} is a reserved word.");
+        }
+        placeholders.add(placeholder);
       }
     });
   }
