@@ -58,16 +58,13 @@ class HandlerReflection {
       return req;
     }
 
-    if (name == "body") {
-      return value != null ? value : "";
-      // if type other than string create new instance of type with body as param
-      // here we have to implement some sort of body parser with respect to request
-      // content type. Maybe move these named conversions outside of _processParam?
-    }
-
     // no value for param
     if (value == null) {
       return _processNullValue(name, param);
+    }
+
+    if (name == "body") {
+      return value != null ? value : "";
     }
 
     // simply return strings
@@ -108,7 +105,7 @@ class HandlerReflection {
   ArgumentsResult _getPosArgs(Map<String, dynamic> injectables, shelf.Request req, ArgumentsResult res) {
 
     // single argument not in injectables and assignable always injects request
-    if (_posParams.length == 1 && !injectables.containsKey(_posParams.keys.first)) {
+    if (_posParams.length == 1 && !injectables.containsKey(_posParams.keys.first) && _posParams.keys.first != "body") {
       if (_reqMirror.type.isAssignableTo(_posParams.values.first.type)) {
         res.addPositionalArgument(req);
         return res;

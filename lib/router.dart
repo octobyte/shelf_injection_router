@@ -34,7 +34,7 @@ class Router {
       InjectionContext ctx = new InjectionContext();
       ctx.injectables.addAll(route.params(request.requestedUri));
       context[InjectionContext.CONTEXT_NAME] = ctx;
-
+      var reqBody = request.read();
       // create new request with injection context
       shelf.Request req = new shelf.Request(
           request.method, request.requestedUri,
@@ -42,14 +42,14 @@ class Router {
           headers: request.headers,
           protocolVersion: request.protocolVersion,
           url: request.url,
-          scriptName: request.scriptName
+          scriptName: request.scriptName,
+          body: reqBody
       );
-
-      return HttpBodyHandler.processRequest(request.read()).then((body) {
-        ctx.injectables["body"] = body;
+      if(reqBody.contentLength < 1) {
         return route.handler(req);
-      }).catchError(() {
-        ctx.injectables["body"] = "";
+      }
+      return HttpBodyHandler.processRequest(reqBody).then((body) {
+        ctx.injectables["body"] = body;
         return route.handler(req);
       });
     }

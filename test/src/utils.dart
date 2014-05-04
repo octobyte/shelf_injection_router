@@ -26,6 +26,7 @@ shelf.Request createShelfRequest(String method, String path, [Map<String, dynami
 class HttpRequestMock extends Mock implements HttpRequest {
   Stream<List<int>> _real;
   HttpHeaders headers;
+  int contentLength = 1;
 
   HttpRequestMock(String path) {
     this._real = new File(path).openRead();
