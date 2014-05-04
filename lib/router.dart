@@ -1,6 +1,9 @@
 library shelf_injection_router.router;
 
 import 'dart:async';
+import 'dart:io';
+import 'package:http_server/http_server.dart';
+
 import 'package:shelf/shelf.dart' as shelf;
 import './src/injection_context.dart';
 
@@ -42,16 +45,13 @@ class Router {
           scriptName: request.scriptName
       );
 
-      // read out the requests body as string for further processing
-      return request.readAsString().then((String body) {
+      return HttpBodyHandler.processRequest(request.read()).then((body) {
         ctx.injectables["body"] = body;
         return route.handler(req);
-      }).catchError((err) {
+      }).catchError(() {
         ctx.injectables["body"] = "";
         return route.handler(req);
       });
-
-
     }
   }
 

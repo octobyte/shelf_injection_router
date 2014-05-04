@@ -8,6 +8,7 @@ import 'package:shelf_injection_router/router.dart';
 import 'package:shelf_injection_router/route.dart';
 import './src/utils.dart';
 import 'package:shelf_injection_router/src/injection_context.dart';
+import 'package:http_server/http_server.dart';
 
 void main() {
 
@@ -106,7 +107,6 @@ void main() {
         test("injects converted values", () {
           var request = createShelfRequest('GET', '/values/tom/123/42.45/1/false');
           router.addRoute('/values/:name/:id/:lat/:b1/:b2', (int id, String name, double lat, bool b1, bool b2) {
-            print("${id} ${name} ${lat}");
             expect(id, equals(123));
             expect(name, equals("tom"));
             expect(lat, equals(42.45));
@@ -144,11 +144,23 @@ void main() {
           expect(handler(request), completes);
         });
 
-        test("injects resolved body as string", () {
+        test("injects resolved body as string when text", () {
           var req = createShelfRequest('GET', '/body', null, 'src/body.txt');
           router.addRoute('/body', (body) {
-            expect(body is String, isTrue);
-            expect(body, equals("textbody"));
+            expect(body is HttpRequestBody, isTrue);
+            expect(body.type, equals('text'));
+            expect(body.body, equals("textbody"));
+            return new shelf.Response.ok("done");
+          });
+          expect(handler(req), completes);
+        });
+
+        test("injects resolved body as json map when json", () {
+          var req = createShelfRequest('GET', '/bodyjson', null, 'src/body.json');
+          router.addRoute('/bodyjson', (body) {
+            expect(body is HttpRequestBody, isTrue);
+            expect(body.type, equals('json'));
+            expect(body.body['asdf'], equals("qwer"));
             return new shelf.Response.ok("done");
           });
           expect(handler(req), completes);
