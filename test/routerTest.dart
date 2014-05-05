@@ -71,6 +71,19 @@ void main() {
         handler(request);
       });
 
+      test("handler gets called with different var pattern", () {
+        var r = new Router();
+        r.patternPrefix = "{";
+        r.patternSuffix = "}";
+        r.addRoute("/a/{b}", (String b) {
+          expect(b, equals("asdf"));
+          return new shelf.Response.ok("Called with ${b}");
+        });
+        var req = createShelfRequest('GET', '/a/asdf');
+        var h = r.middleware((r){});
+        expect(h(req), completes);
+      });
+
 
 
     });
