@@ -117,6 +117,11 @@ router.addRoute("/hello/:?name", (String name) {
 	// never executed
 });
 
+// default value used for "/hello"
+router.addRoute("/hello/:?name", ({String name: "unknown"}) {
+	// name -> "unknown"
+});
+
 ```
 
 Body and request are special injectables and reserved words (you can not use "body" or "request" as route param names). By
