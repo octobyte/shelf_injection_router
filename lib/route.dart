@@ -25,17 +25,22 @@ import 'package:shelf_injection_router/src/handler_reflection.dart';
  */
 class Route {
 
-  static final String VAR_PATTERN = r'([\w\d]+)';
+  static final String VAR_PATTERN = r'(\?*[\w\d]+)';
   static final String VALUE_PATTERN = r'([^\/]+)';
+  static final String OPT_VALUE_PATTERN = r'([^\/]*)';
+  static final String LAST_OPT_VALUE_PATTERN = r'([^\/]*)';
   final List<String> reservedParams = ["request", "body"];
 
   // Handler for this Route
   Function handler;
 
   String _route;
+  String _routePattern;
   RegExp _prepareExpression;
   RegExp _variableExpression = new RegExp(VAR_PATTERN);
   RegExp _matcher;
+  String _prefix = ':';
+  String _suffix = '';
 
   // List of placeholders in this route
   List<String> placeholders = [];
@@ -48,6 +53,8 @@ class Route {
   Route(String route, handler, {varPrefix: ':', varSuffix: ''}) {
     HandlerReflection ref = new HandlerReflection(handler);
     this.handler = ref.createHandler();
+    _prefix = varPrefix;
+    _suffix = varSuffix;
     _prepareExpression = new RegExp(varPrefix + VAR_PATTERN + varSuffix);
     this.route = route;
   }
@@ -74,11 +81,17 @@ class Route {
       if(m != null) {
         for(var i = 0; i < m.groupCount; i++) {
           if(placeholders[i] is String) {
-            result[placeholders[i]] = m[i+1];
+            var value = (m[i+1] != '') ? m[i+1] : null;
+            result[placeholders[i]] = value;
           }
         }
       }
     }
+    placeholders.forEach((name) {
+      if(!result.containsKey(name)) {
+        result[name] = null;
+      }
+    });
     return result;
   }
 
@@ -88,22 +101,51 @@ class Route {
    */
   void set route(String route) {
     _route = route;
-    _compileMatcher(route);
+    _routePattern = route;
+    _compileMatcher();
+
+    print("Prepare: ${_prepareExpression.pattern}");
+    print("Route: ${_route}");
+    print("Pattern: ${_routePattern}");
+    print("Matcher: ${_matcher.pattern}");
   }
 
   // Compile route definition to matcher and sets placeholders.
-  void _compileMatcher(String route) {
-    _matcher = new RegExp('^' + route.replaceAll(_prepareExpression, VALUE_PATTERN) + r'$');
+  void _compileMatcher() {
     placeholders = [];
-    _prepareExpression.allMatches(route).forEach((m) {
+
+    _prepareExpression.allMatches(_route).forEach((m) {
       for(var i = 1; i<=m.groupCount; i++) {
-        String placeholder = m.group(i);
-        if(reservedParams.contains(placeholder)) {
-          throw new Exception("Can't use ':${placeholder}' in route ${route}. ${placeholder} is a reserved word.");
-        }
-        placeholders.add(placeholder);
+        _addPlaceholder(m.group(i), i, m.groupCount);
       }
     });
+
+    _matcher = new RegExp('^' + _routePattern + r'$');
+  }
+
+  // adds a placeholder and prepares value extraction pattern
+  void _addPlaceholder(String placeholder, int index, int total) {
+    String valuePattern = VALUE_PATTERN;
+    String placeholderName = placeholder;
+    String placeholderPattern = placeholder;
+    String patternPrefix = '';
+    String valuePrefix = '';
+
+    if(placeholder.indexOf('?') == 0) {
+      valuePattern = OPT_VALUE_PATTERN;
+      placeholderName = placeholder.replaceAll('?', '');
+      placeholderPattern = r"\?" + placeholderName;
+      if(index == total) {
+        // if last param is optional last slash is also optional
+        patternPrefix = r'\/';
+        valuePrefix = r'\/*';
+      }
+    }
+    if(reservedParams.contains(placeholderName)) {
+      throw new Exception("Can't use ':${placeholderName}' in route ${_route}. ${placeholderName} is a reserved word.");
+    }
+    _routePattern = _routePattern.replaceFirst(new RegExp(patternPrefix + _prefix + placeholderPattern + _suffix), valuePrefix + valuePattern);
+    placeholders.add(placeholderName);
   }
 
 }

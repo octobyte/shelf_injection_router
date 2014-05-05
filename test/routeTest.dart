@@ -25,7 +25,8 @@ void main() {
       "vlevel5": {"route":"/a/:a/b/:b", "placeholders": ['a', 'b']},
       "vlevel6": {"route":"/a/:a/:b/:c", "placeholders": ['a', 'b', 'c']},
       "vlevel7": {"route":"/a/:a/:b/:c/b", "placeholders": ['a', 'b', 'c']},
-      "float1": {"route":"/float/:lat/:lon", "placeholders": ['lat', 'lon']}
+      "float1": {"route":"/float/:lat/:lon", "placeholders": ['lat', 'lon']},
+      "optional1": {"route":"/optional/:?optvar", "placeholders": ["optvar"]}
     };
 
     Map<String, Map<String, dynamic>> testRoutesOtherFormat = {
@@ -36,11 +37,14 @@ void main() {
         "vlevel4": {"route":"/a/{a}/{b}/b", "placeholders": ['a', 'b']},
         "vlevel5": {"route":"/a/{a}/b/{b}", "placeholders": ['a', 'b']},
         "vlevel6": {"route":"/a/{a}/{b}/{c}", "placeholders": ['a', 'b', 'c']},
-        "vlevel7": {"route":"/a/{a}/{b}/{c}/b", "placeholders": ['a', 'b', 'c']}
+        "vlevel7": {"route":"/a/{a}/{b}/{c}/b", "placeholders": ['a', 'b', 'c']},
+        "optional1": {"route":"/optional/{?optvar}", "placeholders": ['optvar']}
     };
 
     Map<String, Route> routes = {};
     testRoutes.forEach((name, config) {
+      print("----------------------------------------");
+      print("Creating route ${name}");
       routes[name] = new Route(config['route'], handler);
     });
 
@@ -101,7 +105,19 @@ void main() {
       "/float/42.44/27.334": {
         "matches": ["float1"],
         "params": [{"lat":"42.44", "lon":"27.334"}]
-      }
+      },
+      "/optional/optvalue": {
+        "matches": ["optional1"],
+        "params": [{"optvar": "optvalue"}]
+      },
+      "/optional/": {
+        "matches": ["optional1"],
+        "params": [{"optvar": null}]
+      },
+      "/optional": {
+          "matches": ["vlevel0", "optional1"],
+          "params": [{"a":"optional"}, {"optvar": null}]
+      },
     };
 
     group("construct", (){
