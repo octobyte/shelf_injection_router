@@ -134,7 +134,7 @@ class HandlerReflection {
       try {
         var argument = _processParam(name, param, req, injectable);
         if(argument != null) {
-          res.addNamedArgument(param.qualifiedName, argument);
+          res.addNamedArgument(param.simpleName, argument);
         }
       }
       on Exception catch (e) {

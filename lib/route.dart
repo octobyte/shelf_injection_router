@@ -103,11 +103,6 @@ class Route {
     _route = route;
     _routePattern = route;
     _compileMatcher();
-
-    print("Prepare: ${_prepareExpression.pattern}");
-    print("Route: ${_route}");
-    print("Pattern: ${_routePattern}");
-    print("Matcher: ${_matcher.pattern}");
   }
 
   // Compile route definition to matcher and sets placeholders.
