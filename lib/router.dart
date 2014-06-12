@@ -59,6 +59,8 @@ class Router {
       return HttpBodyHandler.processRequest(reqBody).then((body) {
         ctx.injectables["body"] = body;
         return route.handler(req);
+      }).catchError((e) {
+        throw new NotAcceptableException({"message": "invalid request body provided"});
       });
     }
   }

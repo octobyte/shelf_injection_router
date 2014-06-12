@@ -16,7 +16,7 @@ void main() {
 
     group("construct", () {
 
-      test("router uses enpty base path as default base path", () {
+      test("router uses empty base path as default base path", () {
         Router router = new Router();
         expect(router.basePath, equals(''));
       });
@@ -177,6 +177,17 @@ void main() {
             return new shelf.Response.ok("done");
           });
           expect(handler(req), completes);
+        });
+
+        test("throws http exception on invalid body", () {
+          var req = createShelfRequest('GET', '/invalidbodyjson', null, 'src/invalid_body.json');
+          router.addRoute('/invalidbodyjson', (body) {
+            return new shelf.Response.ok("done");
+          });
+          expect(handler(req), completion((res){
+            if(res.statusCode == 406) return true;
+            return false;
+          }));
         });
 
       });
