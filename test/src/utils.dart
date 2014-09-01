@@ -3,7 +3,7 @@ import 'package:shelf/shelf.dart' as shelf;
 import 'dart:async';
 import 'dart:io';
 import 'package:shelf_injection_router/src/injection_context.dart';
-import 'package:unittest/mock.dart';
+import 'package:mock/mock.dart';
 
 String BASE_URL = "http://www.test.io";
 
